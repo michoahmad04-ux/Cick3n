@@ -2,532 +2,979 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hasana Chicken - Menu & Pemesanan</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,400&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cleverton — Kas &amp; Tugas Warga</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-        background-color: #faf7f2;
-        color: #2b2b2b;
-        font-family: 'Poppins', sans-serif;
-        padding: 40px 20px 120px;
-        display: flex;
-        justify-content: center;
-    }
-    .menu-container {
-        max-width: 800px;
-        width: 100%;
-        background: #ffffff;
-        padding: 50px 40px;
-        border-radius: 16px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-        border: 1px solid #eae5d9;
-    }
-    .header { text-align: center; margin-bottom: 20px; position: relative; }
-    .header h1 { font-family: 'Playfair Display', serif; font-size: 2.5rem; letter-spacing: 2px; color: #d9731f; text-transform: uppercase; }
-    .header p { font-size: 0.9rem; letter-spacing: 3px; color: #7a7a7a; margin-top: 5px; text-transform: uppercase; }
-    .conn-dot { position: absolute; top: 0; right: 0; width: 10px; height: 10px; border-radius: 50%; background: #cfc4b6; transition: background 0.2s ease; }
-    .conn-dot.online { background: #5c9c63; }
+:root{
+  --bg:#F6F8FA;
+  --bg-elev:#FFFFFF;
+  --ink:#1F2328;
+  --ink-soft:#59636E;
+  --ink-faint:#818B98;
+  --line:#D0D7DE;
+  --brand:#0969DA;
+  --brand-dark:#0D1117;
+  --brand-soft:#DDF0FF;
+  --success:#1A7F37;
+  --success-soft:#DAFBE1;
+  --danger:#CF222E;
+  --danger-soft:#FFEBE9;
+  --card-radius:12px;
+  --sheet-radius:12px;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D1117; --bg-elev:#161B22; --ink:#E6EDF3; --ink-soft:#8B949E; --ink-faint:#6E7681;
+    --line:#30363D; --brand:#4493F8; --brand-dark:#010409; --brand-soft:#0C2D6B;
+    --success:#3FB950; --success-soft:#0F2E1B; --danger:#F85149; --danger-soft:#3B0A0A;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D1117; --bg-elev:#161B22; --ink:#E6EDF3; --ink-soft:#8B949E; --ink-faint:#6E7681;
+  --line:#30363D; --brand:#4493F8; --brand-dark:#010409; --brand-soft:#0C2D6B;
+  --success:#3FB950; --success-soft:#0F2E1B; --danger:#F85149; --danger-soft:#3B0A0A;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Inter",system-ui,sans-serif;-webkit-font-smoothing:antialiased;
+  overscroll-behavior-y:contain;
+}
+.app{max-width:480px;margin:0 auto;min-height:100%;position:relative;padding-bottom:calc(92px + env(safe-area-inset-bottom,0px));}
+.num{font-family:"JetBrains Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;}
+h1,h2,h3{margin:0;font-weight:700;letter-spacing:-.01em;}
 
-    .my-orders { margin-bottom: 30px; }
-    .my-orders-title { font-size: 0.75rem; letter-spacing: 1px; text-transform: uppercase; color: #999; margin-bottom: 8px; }
-    .status-card { border: 1px solid #eae5d9; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; background: #fdfbf8; }
-    .status-left { display: flex; flex-direction: column; }
-    .status-left .n { font-size: 0.85rem; font-weight: 500; }
-    .status-left .sub { font-size: 0.72rem; color: #999; margin-top: 2px; }
-    .status-badge { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.3px; padding: 6px 12px; border-radius: 20px; text-transform: uppercase; white-space: nowrap; }
-    .status-badge.pending { background: #f4ece0; color: #a3762f; }
-    .status-badge.diproses { background: #e4eefb; color: #2f6fa3; }
-    .status-badge.diantar { background: #ece6f5; color: #6a4c9c; }
-    .status-badge.selesai { background: #e7f4e6; color: #3f7d3c; }
+/* ---------- top bar ---------- */
+.masthead{
+  background:var(--brand-dark);color:#fff;
+  padding:calc(12px + env(safe-area-inset-top,0px)) 18px 12px;
+}
+.masthead-row{display:flex;align-items:center;justify-content:space-between;max-width:480px;margin:0 auto;}
+.brand{display:flex;align-items:center;gap:9px;}
+.brand-mark{
+  width:30px;height:30px;border-radius:7px;background:var(--brand);
+  display:flex;align-items:center;justify-content:center;flex:none;
+}
+.brand-mark svg{width:16px;height:16px;color:#fff;}
+.brand-name{font-size:16px;font-weight:700;}
+.brand-sub{font-size:11px;color:#8B949E;margin-top:-1px;}
+.masthead-actions{display:flex;align-items:center;gap:8px;}
+.icon-btn{
+  width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff;cursor:pointer;flex:none;
+}
+.icon-btn svg{width:16px;height:16px;}
+.who-chip{
+  display:flex;align-items:center;gap:6px;font-size:11.5px;color:#C9D1D9;
+  margin-top:9px;max-width:480px;
+}
+.who-avatar{width:18px;height:18px;border-radius:5px;background:var(--brand);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none;}
+.admin-badge{background:var(--success-soft);color:var(--success);font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;}
 
-    .section-title { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: #333; margin: 30px 0 6px; padding-bottom: 8px; border-bottom: 2px solid #d9731f; display: inline-block; }
-    .section-sub { font-size: 0.78rem; color: #999; margin-bottom: 18px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-    .grid.compact { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+/* ---------- hero ---------- */
+.hero{
+  margin:14px 20px 4px;position:relative;overflow:hidden;border-radius:var(--card-radius);
+  background:linear-gradient(160deg,var(--brand) 0%,var(--brand-dark) 100%);color:#F0F6FC;
+  padding:20px 20px 18px;border:1px solid var(--line);
+}
+.hero svg.motif{position:absolute;inset:0;width:100%;height:100%;opacity:.14;}
+.hero-label{font-size:12.5px;color:#C9D1D9;position:relative;}
+.hero-amount{font-size:40px;font-weight:700;margin-top:4px;position:relative;line-height:1;}
+.hero-amount span{font-size:14px;font-weight:600;margin-left:6px;color:#C9D1D9;}
+.hero-budget{
+  margin-top:15px;position:relative;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);
+  border-radius:8px;padding:10px 13px;display:flex;align-items:center;justify-content:space-between;font-size:13px;cursor:pointer;
+}
+.hero-budget b{font-weight:700;}
+.hero-budget svg{width:15px;height:15px;opacity:.8;}
+.budget-bar{height:4px;border-radius:2px;background:rgba(255,255,255,.16);margin-top:8px;overflow:hidden;}
+.budget-bar i{display:block;height:100%;background:#79C0FF;border-radius:2px;}
 
-    .card { display: flex; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #f0ebe1; transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease; position: relative; }
-    .card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
-    .card.sold-out { opacity: 0.55; transform: none; box-shadow: none; }
-    .card img { width: 100px; height: 100px; object-fit: cover; flex-shrink: 0; }
-    .card.no-img { padding: 14px; }
-    .sold-badge { position: absolute; top: 8px; left: 8px; background: #b23b3b; color: #fff; font-size: 0.6rem; letter-spacing: 0.5px; text-transform: uppercase; padding: 3px 8px; border-radius: 6px; font-weight: 600; }
-    .card-info { padding: 13px; display: flex; flex-direction: column; justify-content: center; flex: 1; min-width: 0; }
-    .card.no-img .card-info { padding: 0; }
-    .card-title { font-size: 0.92rem; font-weight: 500; color: #1a1a1a; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-    .card-price { font-weight: 600; color: #d9731f; font-size: 0.95rem; white-space: nowrap; }
-    .card-desc { font-size: 0.75rem; color: #888; margin-top: 3px; }
+/* ---------- month switch ---------- */
+.month-switch{display:flex;align-items:center;justify-content:center;gap:16px;padding:18px 20px 4px;}
+.month-switch button{width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--bg-elev);color:var(--ink);display:flex;align-items:center;justify-content:center;}
+.month-switch button svg{width:15px;height:15px;}
+.month-switch h2{font-size:17px;}
+.month-summary{text-align:center;padding:6px 20px 4px;color:var(--ink-soft);font-size:13px;}
+.month-summary b{color:var(--ink);}
+.month-summary .plus{color:var(--success);font-weight:700;}
 
-    .qty-row { display: flex; align-items: center; justify-content: space-between; margin-top: 9px; }
-    .qty-controls { display: flex; align-items: center; gap: 10px; }
-    .qty-btn { width: 26px; height: 26px; border-radius: 50%; border: 1px solid #d9731f; background: #fff; color: #d9731f; font-size: 1rem; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s ease; }
-    .qty-btn:hover { background: #d9731f; color: #fff; }
-    .qty-value { min-width: 16px; text-align: center; font-size: 0.9rem; font-weight: 500; }
-    .add-btn { border: none; background: #d9731f; color: #fff; font-size: 0.72rem; letter-spacing: 0.5px; padding: 6px 13px; border-radius: 20px; cursor: pointer; text-transform: uppercase; transition: background 0.15s ease; }
-    .add-btn:hover { background: #b95f16; }
-    .sold-out-label { font-size: 0.7rem; color: #b23b3b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+/* ---------- sheet / card ---------- */
+.sheet{margin:14px 20px;background:var(--bg-elev);border:1px solid var(--line);border-radius:var(--sheet-radius);overflow:hidden;}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 6px;font-size:12.5px;color:var(--ink-soft);font-weight:600;}
+.sheet-head a{color:var(--brand);font-weight:600;text-decoration:none;font-size:12.5px;}
+.member-row{display:flex;align-items:center;gap:11px;padding:12px 16px;border-top:1px solid var(--line);}
+.member-row:first-of-type{border-top:none;}
+.avatar{width:38px;height:38px;border-radius:8px;flex:none;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14.5px;color:#fff;}
+.member-meta{flex:1;min-width:0;}
+.member-meta .name{font-weight:700;font-size:14.5px;}
+.member-meta .name small{font-weight:500;color:var(--ink-faint);font-size:11.5px;margin-left:3px;}
+.member-meta .status{font-size:12px;margin-top:1px;}
+.status.ok{color:var(--success);}
+.status.due{color:var(--danger);}
+.switch{position:relative;width:42px;height:24px;border-radius:20px;flex:none;background:var(--line);border:none;cursor:pointer;transition:background .15s;}
+.switch.on{background:var(--success);}
+.switch i{position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .15s;}
+.switch.on i{transform:translateX(18px);}
+.hint{padding:4px 20px 2px;font-size:11.5px;color:var(--ink-faint);line-height:1.5;}
 
-    .footer { text-align: center; margin-top: 50px; font-size: 0.8rem; color: #aaa; letter-spacing: 1px; }
-    .admin-link { margin-top: 14px; display: inline-block; background: none; font-size: 0.72rem; color: #c2b8a8; text-decoration: underline; letter-spacing: 0.5px; }
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid transparent;border-radius:8px;padding:11px 16px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;}
+.btn-primary{background:var(--brand);color:#fff;}
+.btn-ghost{background:var(--bg-elev);color:var(--ink);border:1px solid var(--line);}
+.btn-clay{background:var(--danger-soft);color:var(--danger);}
+.btn-block{width:100%;}
+.pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;}
+.pill.success{background:var(--success-soft);color:var(--success);}
+.pill.brand{background:var(--brand-soft);color:var(--brand);}
 
-    .cart-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #d9731f; color: #fff; padding: 16px 20px; display: none; align-items: center; justify-content: space-between; cursor: pointer; box-shadow: 0 -6px 20px rgba(0,0,0,0.12); z-index: 50; }
-    .cart-bar.visible { display: flex; }
-    .cart-bar-info { display: flex; flex-direction: column; }
-    .cart-bar-info small { font-size: 0.7rem; letter-spacing: 1px; opacity: 0.8; text-transform: uppercase; }
-    .cart-bar-info strong { font-size: 1.05rem; }
-    .cart-bar-action { background: #fff; color: #d9731f; font-weight: 600; padding: 10px 20px; border-radius: 24px; font-size: 0.85rem; letter-spacing: 0.5px; }
+/* ---------- bottom nav ---------- */
+.tabbar-wrap{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;pointer-events:none;}
+.tabbar{
+  pointer-events:auto;width:100%;max-width:480px;background:var(--bg-elev);border-top:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));
+}
+.tab-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;color:var(--ink-faint);padding:7px 2px;border-radius:8px;font-size:10px;font-family:inherit;font-weight:600;}
+.tab-btn svg{width:19px;height:19px;}
+.tab-btn.active{color:var(--brand);}
+.fab-wrap{flex:0 0 auto;position:relative;top:-16px;margin:0 4px;}
+.fab{width:52px;height:52px;border-radius:50%;background:var(--brand);display:flex;align-items:center;justify-content:center;border:4px solid var(--bg);color:#fff;}
+.fab svg{width:22px;height:22px;}
 
-    .overlay { position: fixed; inset: 0; background: rgba(20, 15, 10, 0.45); display: none; align-items: flex-end; justify-content: center; z-index: 100; }
-    .overlay.visible { display: flex; }
-    .modal { background: #fff; width: 100%; max-width: 480px; border-radius: 20px 20px 0 0; padding: 28px 26px 30px; max-height: 88vh; overflow-y: auto; animation: slideUp 0.25s ease; }
-    @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    .modal h2 { font-family: 'Playfair Display', serif; color: #d9731f; font-size: 1.4rem; margin-bottom: 18px; }
-    .order-line { display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; padding: 10px 0; border-bottom: 1px solid #f0ebe1; }
-    .order-line .name { font-weight: 500; }
-    .order-line .sub { color: #999; font-size: 0.78rem; }
-    .order-total { display: flex; justify-content: space-between; font-weight: 600; font-size: 1.05rem; margin-top: 16px; padding-top: 14px; border-top: 2px solid #d9731f; color: #333; }
+/* ---------- riwayat ---------- */
+.day-group{padding:10px 20px 2px;font-size:11.5px;color:var(--ink-faint);font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
+.log-row{display:flex;gap:11px;padding:11px 16px;background:var(--bg-elev);border-top:1px solid var(--line);}
+.log-dot{width:32px;height:32px;border-radius:8px;flex:none;display:flex;align-items:center;justify-content:center;}
+.log-dot svg{width:15px;height:15px;}
+.log-body{flex:1;min-width:0;}
+.log-title{font-size:13.5px;font-weight:700;}
+.log-meta{font-size:11.5px;color:var(--ink-faint);margin-top:1px;}
+.log-amount{font-weight:700;font-size:13.5px;white-space:nowrap;}
+.wrap-sheet{margin:14px 20px;border-radius:var(--sheet-radius);overflow:hidden;border:1px solid var(--line);}
+.wrap-sheet .log-row{margin:0;}
+.wrap-sheet .log-row:first-child{border-top:none;}
 
-    .type-select { display: flex; gap: 10px; margin: 22px 0 6px; }
-    .type-option { flex: 1; border: 2px solid #eae5d9; border-radius: 12px; padding: 12px 6px; text-align: center; cursor: pointer; font-size: 0.78rem; font-weight: 500; color: #555; transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease; }
-    .type-option .emoji { display: block; font-size: 1.3rem; margin-bottom: 4px; }
-    .type-option.active { border-color: #d9731f; background: #fdf1e6; color: #d9731f; }
+/* ---------- rumah / piket ---------- */
+.piket-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--line);}
+.piket-row:first-of-type{border-top:none;}
+.piket-day{width:62px;flex:none;font-weight:700;font-size:13.5px;}
+.piket-select{flex:1;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:9px 10px;font-family:inherit;font-size:13px;}
 
-    .field { margin-top: 16px; }
-    .field label { display: block; font-size: 0.78rem; color: #777; margin-bottom: 6px; letter-spacing: 0.3px; }
-    .field input { width: 100%; padding: 10px 12px; border: 1px solid #e2ddd0; border-radius: 8px; font-family: inherit; font-size: 0.9rem; }
-    .field input:focus { outline: none; border-color: #d9731f; }
+/* ---------- empty ---------- */
+.empty{padding:32px 24px;text-align:center;color:var(--ink-faint);font-size:13px;}
+.empty svg{width:30px;height:30px;margin-bottom:10px;opacity:.55;}
 
-    .hint { font-size: 0.75rem; color: #999; margin-top: 10px; line-height: 1.4; }
+/* ---------- modal ---------- */
+.overlay{position:fixed;inset:0;background:rgba(13,17,23,.55);display:none;align-items:flex-end;justify-content:center;z-index:50;}
+.overlay.show{display:flex;}
+.modal{width:100%;max-width:480px;background:var(--bg-elev);border-radius:16px 16px 0 0;padding:20px 20px calc(22px + env(safe-area-inset-bottom,0px));max-height:86vh;overflow-y:auto;border-top:1px solid var(--line);}
+.modal h3{font-size:17px;margin-bottom:14px;}
+.field{margin-bottom:13px;}
+.field label{display:block;font-size:12px;color:var(--ink-soft);margin-bottom:5px;font-weight:600;}
+.field input,.field select,.field textarea{width:100%;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:14px;}
+.modal-actions{display:flex;gap:10px;margin-top:16px;}
+.modal-actions .btn{flex:1;}
+.sheet-actions{display:flex;flex-direction:column;gap:0;}
+.action-row{display:flex;align-items:center;gap:12px;padding:13px 2px;border-top:1px solid var(--line);background:none;border-left:none;border-right:none;border-bottom:none;width:100%;text-align:left;font-family:inherit;color:var(--ink);cursor:pointer;}
+.action-row:first-child{border-top:none;}
+.action-row .ic{width:36px;height:36px;border-radius:8px;background:var(--brand-soft);color:var(--brand);display:flex;align-items:center;justify-content:center;flex:none;}
+.action-row .ic svg{width:17px;height:17px;}
+.action-row div b{display:block;font-size:14px;}
+.action-row div span{font-size:11.5px;color:var(--ink-faint);}
 
-    .submit-btn { width: 100%; margin-top: 22px; background: #d9731f; color: #fff; border: none; padding: 15px; border-radius: 10px; font-size: 0.95rem; font-weight: 600; letter-spacing: 0.5px; cursor: pointer; transition: background 0.15s ease; }
-    .submit-btn:hover { background: #b95f16; }
-    .submit-btn:disabled { background: #e5c4a6; cursor: not-allowed; }
+.member-edit-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-top:1px solid var(--line);}
+.member-edit-row:first-child{border-top:none;}
+.member-edit-row input[type=text]{flex:1;}
+.member-edit-row select{width:104px;flex:none;}
+.icon-x{background:none;border:none;color:var(--danger);cursor:pointer;flex:none;padding:6px;}
+.icon-x svg{width:15px;height:15px;}
 
-    .close-btn { position: absolute; top: 18px; right: 22px; background: none; border: none; font-size: 1.3rem; color: #999; cursor: pointer; }
-    .modal-wrap { position: relative; }
-    .empty-msg { text-align: center; color: #999; font-size: 0.85rem; padding: 20px 0; }
+.acct-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line);}
+.acct-row:first-child{border-top:none;}
+.acct-row .name{flex:1;font-weight:600;font-size:13.5px;}
 
-    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px); background: #2b2b2b; color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 0.85rem; opacity: 0; pointer-events: none; transition: 0.25s ease; z-index: 200; max-width: 90%; text-align: center; }
-    .toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast{position:fixed;left:50%;bottom:110px;transform:translateX(-50%);background:var(--brand-dark);color:#fff;padding:9px 16px;border-radius:8px;font-size:12.5px;z-index:80;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;border:1px solid rgba(255,255,255,.1);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(-4px);}
 
-    /* Animasi proses pesanan */
-    .process-overlay {
-        position: fixed; inset: 0; background: rgba(250, 247, 242, 0.97); display: none;
-        align-items: center; justify-content: center; z-index: 400; flex-direction: column; text-align: center; padding: 20px;
-    }
-    .process-overlay.visible { display: flex; }
-    .chicken-anim { font-size: 5rem; animation: bob 0.9s ease-in-out infinite; position: relative; }
-    @keyframes bob { 0%,100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-14px) rotate(3deg); } }
-    .thumb-anim { font-size: 2.4rem; display: inline-block; animation: thumbPop 0.9s ease-in-out infinite; margin-left: -10px; }
-    @keyframes thumbPop { 0%,100% { transform: scale(1) rotate(0deg); } 50% { transform: scale(1.25) rotate(-10deg); } }
-    .process-text { font-family: 'Playfair Display', serif; color: #d9731f; font-size: 1.3rem; margin-top: 18px; }
-    .process-sub { font-size: 0.82rem; color: #999; margin-top: 6px; }
-    .process-dots span { animation: blinkDot 1.4s infinite; opacity: 0; }
-    .process-dots span:nth-child(2) { animation-delay: 0.2s; }
-    .process-dots span:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes blinkDot { 0%,100% { opacity: 0; } 50% { opacity: 1; } }
+.sync-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--ink-faint);padding:8px 20px 0;}
+.sync-badge i{width:6px;height:6px;border-radius:50%;background:var(--ink-faint);}
+.sync-badge.live i{background:var(--success);}
+
+/* ---------- auth screen ---------- */
+.auth-wrap{padding:32px 24px;max-width:400px;margin:0 auto;}
+.auth-card{background:var(--bg-elev);border:1px solid var(--line);border-radius:var(--card-radius);padding:22px;}
+.auth-tabs{display:flex;gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:3px;margin-bottom:18px;}
+.auth-tab{flex:1;text-align:center;padding:8px;border-radius:6px;font-size:13px;font-weight:700;color:var(--ink-soft);background:none;border:none;font-family:inherit;cursor:pointer;}
+.auth-tab.active{background:var(--brand);color:#fff;}
+.auth-note{font-size:12px;color:var(--ink-faint);margin-top:12px;line-height:1.5;}
+.auth-error{font-size:12.5px;color:var(--danger);margin-top:10px;display:none;}
+.auth-error.show{display:block;}
 </style>
 </head>
 <body>
-
-<div class="menu-container">
-    <div class="header">
-        <span class="conn-dot" id="connDot" title="Status koneksi"></span>
-        <h1>Hasana Chicken</h1>
-        <p>Special Menu</p>
+<div class="masthead">
+  <div class="masthead-row">
+    <div class="brand">
+      <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg></div>
+      <div><div class="brand-name">Cleverton</div><div class="brand-sub">Kas &amp; tugas warga</div></div>
     </div>
-
-    <div class="my-orders" id="myOrdersSection" style="display:none;">
-        <div class="my-orders-title">Status Pesanan Saya</div>
-        <div id="myOrdersList"></div>
+    <div class="masthead-actions">
+      <button class="icon-btn" id="themeBtn" aria-label="Tema"></button>
+      <button class="icon-btn" id="settingsBtn" aria-label="Pengaturan"></button>
     </div>
-
-    <h2 class="section-title">Menu Paketan</h2>
-    <p class="section-sub">Nasi + Ayam, pilih bagian ayam sesuai selera.</p>
-    <div class="grid" id="grid-paketan"></div>
-
-    <h2 class="section-title">Menu Ayam</h2>
-    <p class="section-sub">Ayam krispi tanpa nasi.</p>
-    <div class="grid" id="grid-ayam"></div>
-
-    <h2 class="section-title">Tambahan</h2>
-    <p class="section-sub">Saus dan nasi tambahan.</p>
-    <div class="grid compact" id="grid-tambahan"></div>
-
-    <div class="footer">
-        <p>Terima kasih atas kunjungan Anda</p>
-        <a class="admin-link" href="admin.html">Kelola Menu (Admin)</a>
-    </div>
+  </div>
+  <div class="who-chip" id="whoChip"></div>
 </div>
 
-<div class="cart-bar" id="cartBar">
-    <div class="cart-bar-info">
-        <small id="cartCount">0 item</small>
-        <strong id="cartTotal">L.E 0</strong>
+<div class="app" id="app"></div>
+
+<div class="tabbar-wrap" id="tabbarWrap">
+  <div class="tabbar">
+    <button class="tab-btn" data-tab="beranda">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+      Beranda
+    </button>
+    <button class="tab-btn" data-tab="iuran">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><path d="M7 15h3"/></svg>
+      Iuran
+    </button>
+    <div class="fab-wrap">
+      <button class="fab" id="fabBtn" aria-label="Tambah">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
     </div>
-    <div class="cart-bar-action">Lihat Pesanan</div>
+    <button class="tab-btn" data-tab="riwayat">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 8v5l3 2"/></svg>
+      Riwayat
+    </button>
+    <button class="tab-btn" data-tab="rumah">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M9 21V12h6v9"/></svg>
+      Rumah
+    </button>
+  </div>
 </div>
 
-<div class="overlay" id="overlay">
-    <div class="modal">
-        <div class="modal-wrap">
-            <button class="close-btn" id="closeModal">&times;</button>
-            <h2>Pesanan Anda</h2>
-            <div id="orderLines"></div>
-            <div class="order-total"><span>Total</span><span id="modalTotal">L.E 0</span></div>
-
-            <div class="type-select">
-                <div class="type-option active" data-type="dinein"><span class="emoji">🍽️</span>Dine In</div>
-                <div class="type-option" data-type="takeaway"><span class="emoji">🥡</span>Take Away</div>
-                <div class="type-option" data-type="delivery"><span class="emoji">🛵</span>Delivery</div>
-            </div>
-
-            <div class="field" id="nameField">
-                <label>Nama Pemesan</label>
-                <input type="text" id="customerName" placeholder="Nama Anda">
-            </div>
-            <div class="field" id="tableField">
-                <label>Nomor Meja (opsional)</label>
-                <input type="text" id="tableNumber" placeholder="Contoh: 5">
-            </div>
-            <div class="field" id="addressField" style="display:none;">
-                <label>Alamat Pengiriman</label>
-                <input type="text" id="deliveryAddress" placeholder="Alamat lengkap">
-            </div>
-
-            <p class="hint" id="modeHint">Pesanan dine in akan diproses langsung oleh staf kami.</p>
-            <button class="submit-btn" id="submitOrder" disabled>Buat Pesanan</button>
-        </div>
-    </div>
-</div>
-
-<div class="process-overlay" id="processOverlay">
-    <div class="chicken-anim">🐔<span class="thumb-anim">👍</span></div>
-    <div class="process-text">Pesanan Anda sedang diproses<span class="process-dots"><span>.</span><span>.</span><span>.</span></span></div>
-    <div class="process-sub" id="processSub">Mohon ditunggu sebentar ya!</div>
-</div>
-
+<div class="overlay" id="overlay"><div class="modal" id="modalBody"></div></div>
 <div class="toast" id="toast"></div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-import {
-    getFirestore, doc, setDoc, onSnapshot, collection, addDoc, serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-
-const firebaseConfig = {
-    apiKey: "AIzaSyCUQEkxHP8Zu3bKc2W1xlwa3SqsXNnJBXU",
-    authDomain: "dapur-rasa-e4112.firebaseapp.com",
-    projectId: "dapur-rasa-e4112",
-    storageBucket: "dapur-rasa-e4112.firebasestorage.app",
-    messagingSenderId: "772295636338",
-    appId: "1:772295636338:web:f4af76b7e981841c7659eb"
+<script>
+/* =================== KONFIGURASI FIREBASE ===================
+   1. Buka https://console.firebase.google.com → buat project baru (gratis).
+   2. Di project itu, buka menu "Firestore Database" → Create database → mode production/test, pilih lokasi terdekat.
+   3. Buka Project settings (ikon gerigi) → scroll ke "Your apps" → tambah app "Web" (ikon </>) → beri nama bebas.
+   4. Firebase akan menampilkan objek firebaseConfig — salin nilainya ke bawah ini, ganti seluruh isi FIREBASE_CONFIG.
+   5. Di tab "Rules" pada Firestore, pakai aturan ini dulu supaya semua penghuni bisa baca/tulis (lihat catatan keamanan di chat):
+        rules_version = '2';
+        service cloud.firestore {
+          match /databases/{database}/documents {
+            match /{document=**} { allow read, write: if true; }
+          }
+        }
+   Tanpa langkah ini, aplikasi tetap jalan tapi HANYA tersimpan lokal di tiap HP (tidak sinkron). */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyB4pX5OyGoeztAVPTMmiiNViXALur_roOQ",
+  authDomain: "perumahan-807d7.firebaseapp.com",
+  projectId: "perumahan-807d7",
+  storageBucket: "perumahan-807d7.firebasestorage.app",
+  messagingSenderId: "556969853715",
+  appId: "1:556969853715:web:0168f722948437d73590e6"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const menuStatusRef = doc(db, "menu_status", "current");
-const ordersCol = collection(db, "orders");
-
-const WA_NUMBER = "201505079639";
-
-const IMG = {
-    original: "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=400&q=80",
-    crispy: "https://images.unsplash.com/photo-1562967914-608f82629710?w=400&q=80"
-};
-
-// Menu Paketan: Nasi + Ayam. Paha Atas dan Dada dipisah jadi item sendiri (harga sama).
-const paketFlavors = [
-    { key: "original", name: "Paket Original", desc: "Nasi + Ayam Original", img: IMG.original, prices: { "Paha Atas": 65, "Dada": 65, "Sayap": 60, "Paha Bawah": 75 } },
-    { key: "keju", name: "Paket Keju", desc: "Nasi + Ayam Keju", img: IMG.crispy, prices: { "Paha Atas": 95, "Dada": 95, "Sayap": 90, "Paha Bawah": 85 } },
-    { key: "blackpepper", name: "Paket Black Pepper", desc: "Nasi + Ayam Black Pepper", img: IMG.original, prices: { "Paha Atas": 90, "Dada": 90, "Sayap": 85, "Paha Bawah": 80 } },
-    { key: "thailand", name: "Paket Thailand", desc: "Nasi + Ayam Saos Thailand", img: IMG.crispy, prices: { "Paha Atas": 90, "Dada": 90, "Sayap": 85, "Paha Bawah": 80 } },
-    { key: "geprek", name: "Paket Geprek", desc: "Nasi + Ayam Geprek", img: IMG.original, prices: { "Paha Atas": 95, "Dada": 95, "Sayap": 90, "Paha Bawah": 65 } },
-    { key: "geprekmozarella", name: "Paket Geprek Mozarella", desc: "Nasi + Ayam Geprek Mozarella", img: IMG.crispy, prices: { "Paha Atas": 100, "Dada": 100, "Sayap": 95, "Paha Bawah": 90 } }
+/* =================== helpers =================== */
+const $ = (s,el=document)=>el.querySelector(s);
+const $$ = (s,el=document)=>[...el.querySelectorAll(s)];
+const fmt = n => new Intl.NumberFormat('id-ID',{maximumFractionDigits:1}).format(n||0);
+const AVATAR_COLORS = ['#0969DA','#1A7F37','#8250DF','#BF3989','#CF222E','#9A6700','#0B6E99'];
+const colorFor = (seed)=>{ let h=0; for(const c of (seed||'')) h=(h*31+c.charCodeAt(0))>>>0; return AVATAR_COLORS[h%AVATAR_COLORS.length]; };
+const monthKey = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+const monthLabel = k => { const [y,m]=k.split('-').map(Number); return new Date(y,m-1,1).toLocaleDateString('id-ID',{month:'long',year:'numeric'}); };
+const shiftMonth = (k,delta)=>{ const [y,m]=k.split('-').map(Number); const d=new Date(y,m-1+delta,1); return monthKey(d); };
+const uid = ()=> (crypto.randomUUID? crypto.randomUUID() : 'id-'+Date.now()+'-'+Math.random().toString(16).slice(2));
+const slug = s => (s||'').trim().toLowerCase().replace(/[^a-z0-9_.]/g,'');
+async function sha256hex(str){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+const DAYS = [['sen','Senin'],['sel','Selasa'],['rab','Rabu'],['kam','Kamis'],['jum',"Jumat"],['sab','Sabtu'],['min','Minggu']];
+const CATS = [
+  {id:'full', label:'Full', mult:1},
+  {id:'wifi', label:'Wifi saja', mult:0.55},
+  {id:'nowifi', label:'Tanpa WiFi', mult:0.7},
 ];
 
-const ayamFlavors = [
-    { key: "original", name: "Chicken Original", desc: "Ayam krispi original", img: IMG.original, prices: { "Paha Atas": 60, "Dada": 60, "Sayap": 75, "Paha Bawah": 70 } },
-    { key: "thailand", name: "Chicken Thailand", desc: "Ayam krispi saus thailand", img: IMG.crispy, prices: { "Paha Atas": 85, "Dada": 85, "Sayap": 60, "Paha Bawah": 75 } },
-    { key: "blackpepper", name: "Black Pepper", desc: "Ayam krispi saus black pepper", img: IMG.original, prices: { "Paha Atas": 65, "Dada": 65, "Sayap": 60, "Paha Bawah": 75 } },
-    { key: "cheese", name: "Chicken Cheese", desc: "Ayam krispi saus keju", img: IMG.crispy, prices: { "Paha Atas": 90, "Dada": 90, "Sayap": 85, "Paha Bawah": 60 } },
-    { key: "geprekoriginal", name: "Geprek Original", desc: "Ayam krispi sambal geprek", img: IMG.original, prices: { "Paha Atas": 90, "Dada": 90, "Sayap": 65, "Paha Bawah": 60 } },
-    { key: "geprekmozarella", name: "Geprek Mozarella", desc: "Ayam krispi sambal geprek + keju mozarella", img: IMG.crispy, prices: { "Paha Atas": 95, "Dada": 95, "Sayap": 90, "Paha Bawah": 65 } }
-];
-
-function expandFlavors(flavors, prefix) {
-    const items = [];
-    flavors.forEach(f => {
-        Object.entries(f.prices).forEach(([part, price]) => {
-            items.push({ id: `${prefix}-${f.key}-${part.toLowerCase().replace(/[^a-z]+/g, "-")}`, name: `${f.name} - ${part}`, desc: f.desc, price, img: f.img });
-        });
-    });
-    return items;
+function toast(msg){
+  const t=$('#toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(toast._h); toast._h=setTimeout(()=>t.classList.remove('show'),2200);
 }
 
-const menuData = {
-    paketan: expandFlavors(paketFlavors, "pkt"),
-    ayam: expandFlavors(ayamFlavors, "ayam"),
-    tambahan: [
-        { id: "add-thailand-sauce", name: "Thailand Sauce", price: 10 },
-        { id: "add-cheese-sauce", name: "Cheese Sauce", price: 15 },
-        { id: "add-geprek-sauce", name: "Geprek Sauce", price: 15 },
-        { id: "add-blackpepper-sauce", name: "Black Pepper Sauce", price: 10 },
-        { id: "add-rice", name: "Rice", price: 15 }
-    ]
+/* =================== data layer =================== */
+const Store = {
+  db:null, downloads:null, live:false, ready:false,
+  members:[], iuran:[], expenses:[], piket:{}, budgets:{}, accounts:[],
+  local:{
+    key:'cleverton_local_v1',
+    read(){ try{ return JSON.parse(localStorage.getItem(this.key)) || null; }catch(e){ return null; } },
+    write(d){ try{ localStorage.setItem(this.key, JSON.stringify(d)); }catch(e){} }
+  },
+  seed(){
+    const now = monthKey(new Date());
+    return {
+      members:[
+        {id:'dimas', name:'Dimas', cat:'nowifi', order:1},
+        {id:'ilham', name:'Ilham', cat:'full', order:2},
+        {id:'zaka', name:'Zaka', cat:'full', order:3},
+        {id:'faris', name:'Faris', cat:'wifi', order:4},
+        {id:'hanif', name:'Hanif', cat:'full', order:5},
+      ],
+      iuran:[], expenses:[],
+      piket:{sen:'dimas',sel:'ilham',rab:'zaka',kam:'faris',jum:'hanif',sab:'dimas',min:'ilham'},
+      budgets:{[now]:9500},
+      accounts:[],
+    };
+  },
+  async init(){
+    let dbCap=null;
+    try{
+      if(typeof firebase!=='undefined' && FIREBASE_CONFIG && FIREBASE_CONFIG.projectId && FIREBASE_CONFIG.projectId !== 'ISI-PROJECT-ID-KAMU'){
+        firebase.initializeApp(FIREBASE_CONFIG);
+        dbCap = firebase.firestore();
+      }
+    }catch(e){ console.error('Firebase init error', e); }
+    if(dbCap){
+      this.db = dbCap; this.live = true;
+      this.subscribe();
+      this.ready = true;
+    }else{
+      let data = this.local.read();
+      if(!data){ data = this.seed(); this.local.write(data); }
+      this.members=data.members; this.iuran=data.iuran; this.expenses=data.expenses;
+      this.piket=data.piket; this.budgets=data.budgets; this.accounts=data.accounts||[];
+      this.ready = true;
+    }
+    Auth.loadSession();
+    renderRoot();
+  },
+  persistLocal(){
+    this.local.write({members:this.members, iuran:this.iuran, expenses:this.expenses, piket:this.piket, budgets:this.budgets, accounts:this.accounts});
+  },
+  subscribe(){
+    try{
+      this.db.collection('members').onSnapshot(async snap=>{
+        this.members = snap.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>(a.order||0)-(b.order||0));
+        if(this.members.length===0 && !this._seeding){ this._seeding=true; await this.seedRemoteMembers(); }
+        renderRoot();
+      });
+      this.db.collection('iuran').onSnapshot(snap=>{ this.iuran = snap.docs.map(d=>({id:d.id, ...d.data()})); renderRoot(); });
+      this.db.collection('expenses').onSnapshot(snap=>{ this.expenses = snap.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>(b.addedAt||0)-(a.addedAt||0)); renderRoot(); });
+      this.db.doc('config/piket').onSnapshot(snap=>{ this.piket = (snap && snap.exists && snap.data()) || {}; renderRoot(); });
+      this.db.collection('budgets').onSnapshot(snap=>{ const b={}; snap.docs.forEach(d=> b[d.id]=d.data().amount); this.budgets=b; renderRoot(); });
+      this.db.collection('accounts').onSnapshot(snap=>{ this.accounts = snap.docs.map(d=>({id:d.id, ...d.data()})); renderRoot(); });
+    }catch(e){ console.error('subscribe error', e); }
+  },
+  async seedRemoteMembers(){
+    const s = this.seed();
+    try{
+      for(const m of s.members) await this.db.collection('members').doc(m.id).set(m);
+      await this.db.doc('config/piket').set(s.piket);
+      for(const b in s.budgets) await this.db.collection('budgets').doc(b).set({amount:s.budgets[b]});
+    }catch(e){ console.error(e); }
+  },
+
+  actorName(){ return Auth.session ? Auth.session.username : 'Anggota'; },
+
+  async getAccount(id){
+    if(this.db){ try{ const snap = await this.db.collection('accounts').doc(id).get(); return (snap && snap.exists) ? {id, ...snap.data()} : null; }catch(e){ return null; } }
+    return this.accounts.find(a=>a.id===id) || null;
+  },
+  async countAccounts(){
+    if(this.db){ try{ const snap = await this.db.collection('accounts').get(); return snap.docs.length; }catch(e){ return this.accounts.length; } }
+    return this.accounts.length;
+  },
+  async saveAccount(acc){
+    if(this.db){ try{ await this.db.collection('accounts').doc(acc.id).set(acc); }catch(e){ throw e; } }
+    else{ const i=this.accounts.findIndex(a=>a.id===acc.id); if(i>=0) this.accounts[i]=acc; else this.accounts.push(acc); this.persistLocal(); renderRoot(); }
+  },
+  async deleteAccount(id){
+    if(this.db){ try{ await this.db.collection('accounts').doc(id).delete(); }catch(e){} }
+    else{ this.accounts = this.accounts.filter(a=>a.id!==id); this.persistLocal(); renderRoot(); }
+  },
+
+  async setMemberPaid(memberId, monthK, paid){
+    const member = this.members.find(m=>m.id===memberId);
+    const amount = amountFor(member);
+    const existing = this.iuran.find(i=>i.memberId===memberId && i.month===monthK);
+    const payload = {memberId, month:monthK, paid, amount, updatedAt:Date.now(), updatedBy:this.actorName()};
+    if(this.db){
+      try{ const id = existing ? existing.id : `${monthK}__${memberId}`; await this.db.collection('iuran').doc(id).set(payload); }
+      catch(e){ toast('Gagal menyimpan, coba lagi'); console.error(e); }
+    }else{
+      if(existing) Object.assign(existing,payload); else this.iuran.push({id:uid(), ...payload});
+      this.persistLocal(); renderRoot();
+    }
+  },
+  async addExpense(desc, amount, monthK){
+    const payload = {desc, amount, month:monthK, date:new Date().toISOString(), addedBy:this.actorName(), addedAt:Date.now()};
+    if(this.db){ try{ await this.db.collection('expenses').add(payload); } catch(e){ toast('Gagal menyimpan'); console.error(e); } }
+    else{ this.expenses.unshift({id:uid(), ...payload}); this.persistLocal(); renderRoot(); }
+  },
+  async setBudget(monthK, amount){
+    if(this.db){ try{ await this.db.collection('budgets').doc(monthK).set({amount}); }catch(e){} }
+    else{ this.budgets[monthK]=amount; this.persistLocal(); renderRoot(); }
+  },
+  async saveMembers(list){
+    if(this.db){
+      try{
+        const existingIds = this.members.map(m=>m.id);
+        const newIds = list.map(m=>m.id);
+        for(const m of list) await this.db.collection('members').doc(m.id).set(m);
+        for(const id of existingIds) if(!newIds.includes(id)) await this.db.collection('members').doc(id).delete();
+      }catch(e){ toast('Gagal menyimpan anggota'); }
+    }else{ this.members = list; this.persistLocal(); renderRoot(); }
+  },
+  async setPiket(day, memberId){
+    const next = {...this.piket, [day]:memberId};
+    if(this.db){ try{ await this.db.doc('config/piket').set(next); }catch(e){} }
+    else{ this.piket = next; this.persistLocal(); renderRoot(); }
+  }
 };
 
-const cart = {};
-let orderType = "dinein";
-let menuStatus = {};
-const myOrders = [];
-
-function formatPrice(n) { return "L.E " + n.toLocaleString("id-ID"); }
-function allItems() { return [...menuData.paketan, ...menuData.ayam, ...menuData.tambahan]; }
-function findItem(id) { return allItems().find(i => i.id === id); }
-function isAvailable(id) { return menuStatus[id] !== false; }
-
-function showToast(msg) {
-    const t = document.getElementById("toast");
-    t.textContent = msg;
-    t.classList.add("visible");
-    setTimeout(() => t.classList.remove("visible"), 3200);
+function amountFor(member){
+  if(!member) return 0;
+  const cat = CATS.find(c=>c.id===member.cat) || CATS[0];
+  const base = Store.budgets[state.monthKey] || 9500;
+  const perHead = base / Math.max(Store.members.length,1);
+  return Math.round(perHead * cat.mult * 10)/10;
 }
 
-function setConnDot(online) { document.getElementById("connDot").classList.toggle("online", online); }
+/* =================== auth =================== */
+const Auth = {
+  session:null,
+  storageKey:'cleverton_session_v1',
+  loadSession(){ try{ const s=JSON.parse(localStorage.getItem(this.storageKey)); if(s&&s.id) this.session=s; }catch(e){} },
+  saveSession(s){ this.session=s; try{ localStorage.setItem(this.storageKey, JSON.stringify(s)); }catch(e){} },
+  clearSession(){ this.session=null; try{ localStorage.removeItem(this.storageKey); }catch(e){} },
+  async register(username,password){
+    const id = slug(username);
+    if(!id) throw new Error('Nama pengguna tidak valid');
+    if(!password || password.length<4) throw new Error('Kata sandi minimal 4 karakter');
+    const existing = await Store.getAccount(id);
+    if(existing) throw new Error('Nama pengguna sudah dipakai');
+    const count = await Store.countAccounts();
+    const isAdmin = count===0;
+    const passwordHash = await sha256hex(password);
+    const acc = {id, username:username.trim(), passwordHash, isAdmin, createdAt:Date.now()};
+    await Store.saveAccount(acc);
+    this.saveSession({id, username:acc.username, isAdmin});
+  },
+  async login(username,password){
+    const id = slug(username);
+    const acc = await Store.getAccount(id);
+    if(!acc) throw new Error('Akun tidak ditemukan');
+    const h = await sha256hex(password);
+    if(h !== acc.passwordHash) throw new Error('Kata sandi salah');
+    this.saveSession({id:acc.id, username:acc.username, isAdmin:!!acc.isAdmin});
+  },
+  logout(){ this.clearSession(); renderRoot(); }
+};
 
-function statusLabel(s, type) {
-    if (s === "diproses") return "Sedang Diproses";
-    if (s === "diantar") return "Sedang Diantar";
-    if (s === "selesai") return type === "delivery" ? "Pesanan Sampai" : "Pesanan Jadi";
-    return "Menunggu Diproses";
+/* =================== state =================== */
+const state = { tab:'beranda', monthKey: monthKey(new Date()), authTab:'login' };
+
+/* =================== derived =================== */
+function iuranFor(monthK){ return Store.iuran.filter(i=>i.month===monthK); }
+function expensesFor(monthK){ return Store.expenses.filter(e=>e.month===monthK); }
+function totalMasukAll(){ return Store.iuran.filter(i=>i.paid).reduce((s,i)=>s+Number(i.amount||0),0); }
+function totalKeluarAll(){ return Store.expenses.reduce((s,e)=>s+Number(e.amount||0),0); }
+function saldoKas(){ return totalMasukAll()-totalKeluarAll(); }
+function masukBulan(k){ return iuranFor(k).filter(i=>i.paid).reduce((s,i)=>s+Number(i.amount||0),0); }
+function keluarBulan(k){ return expensesFor(k).reduce((s,e)=>s+Number(e.amount||0),0); }
+function paidCountBulan(k){ return iuranFor(k).filter(i=>i.paid).length; }
+function isPaid(memberId,k){ const r=Store.iuran.find(i=>i.memberId===memberId&&i.month===k); return !!(r&&r.paid); }
+function paidRecord(memberId,k){ return Store.iuran.find(i=>i.memberId===memberId&&i.month===k); }
+function isAdmin(){ return !!(Auth.session && Auth.session.isAdmin); }
+
+/* =================== icons =================== */
+const ICO = {
+  sun:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+  moon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>',
+  gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+  chevR:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>',
+  chevL:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
+  out:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M7 7h10v10"/></svg>',
+  in:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 7L7 17M17 17H7V7"/></svg>',
+  cart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.5 3h2l2.6 12.6a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 2-1.6L22 7H6"/></svg>',
+  doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>',
+  cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>',
+  users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg>',
+  empty:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18M10.5 5.1A8 8 0 0 1 19 10.5M3 12a9 9 0 0 0 9 9c1.6 0 3.1-.4 4.4-1.2"/></svg>',
+  lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+  logout:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>',
+  shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>',
+};
+
+function motifSVG(){
+  return '<svg class="motif" viewBox="0 0 200 140" preserveAspectRatio="xMidYMid slice"><defs><pattern id="grid8" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="#F0F6FC" stroke-width="0.6"/></pattern></defs><rect width="200" height="140" fill="url(#grid8)"/></svg>';
 }
 
-renderAllGrids();
+/* =================== root render =================== */
+function renderRoot(){
+  const app = $('#app');
+  const tabbar = $('#tabbarWrap');
+  const who = $('#whoChip');
+  $('#themeBtn').innerHTML = themeIcon();
+  $('#settingsBtn').innerHTML = ICO.gear;
 
-onSnapshot(menuStatusRef, (snap) => {
-    menuStatus = snap.exists() ? snap.data() : {};
-    renderAllGrids();
-    setConnDot(true);
-}, () => {
-    setConnDot(false);
-    showToast("Koneksi ke server menu terputus.");
-});
-
-function renderAllGrids() {
-    renderGrid("grid-paketan", menuData.paketan, true);
-    renderGrid("grid-ayam", menuData.ayam, true);
-    renderGrid("grid-tambahan", menuData.tambahan, false);
+  if(!Store.ready){
+    who.innerHTML = '';
+    tabbar.style.display='none';
+    app.innerHTML = `<div class="empty" style="padding-top:60px;">Memuat data…</div>`;
+    return;
+  }
+  if(!Auth.session){
+    who.innerHTML = '';
+    tabbar.style.display='none';
+    $('#settingsBtn').style.visibility='hidden';
+    app.innerHTML = authScreen();
+    bindAuthEvents();
+    return;
+  }
+  $('#settingsBtn').style.visibility='visible';
+  tabbar.style.display='flex';
+  who.innerHTML = `<span class="who-avatar">${Auth.session.username[0].toUpperCase()}</span> Masuk sebagai <b style="color:#fff">${Auth.session.username}</b> ${isAdmin()?'<span class="admin-badge">ADMIN</span>':''} <span style="margin-left:4px;${Store.live?'':'opacity:.6'}">${Store.live?'· tersinkron':'· mode lokal'}</span>`;
+  app.innerHTML = body();
+  $$('.tab-btn').forEach(b=> b.classList.toggle('active', b.dataset.tab===state.tab));
+  bindEvents();
+}
+function themeIcon(){
+  const cur = document.documentElement.getAttribute('data-theme');
+  const dark = cur==='dark' || (cur!=='light' && matchMedia('(prefers-color-scheme: dark)').matches);
+  return dark ? ICO.sun : ICO.moon;
 }
 
-function renderGrid(sectionId, items, withImg) {
-    const grid = document.getElementById(sectionId);
-    grid.innerHTML = items.map(item => {
-        const available = isAvailable(item.id);
-        return `
-        <div class="card ${available ? '' : 'sold-out'} ${withImg ? '' : 'no-img'}">
-            ${available ? '' : '<span class="sold-badge">Habis</span>'}
-            ${withImg ? `<img src="${item.img}" alt="${item.name}">` : ''}
-            <div class="card-info">
-                <div class="card-title"><span>${item.name}</span><span class="card-price">${formatPrice(item.price)}</span></div>
-                ${item.desc ? `<p class="card-desc">${item.desc}</p>` : ''}
-                <div class="qty-row" id="qtyrow-${item.id}"></div>
-            </div>
+function body(){
+  if(state.tab==='beranda') return viewBeranda();
+  if(state.tab==='iuran') return viewIuran();
+  if(state.tab==='riwayat') return viewRiwayat();
+  if(state.tab==='rumah') return viewRumah();
+  return '';
+}
+
+/* =================== auth screen =================== */
+function authScreen(){
+  return `
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button class="auth-tab ${state.authTab==='login'?'active':''}" data-authtab="login">Masuk</button>
+        <button class="auth-tab ${state.authTab==='register'?'active':''}" data-authtab="register">Daftar akun</button>
+      </div>
+      <div class="field"><label>Nama pengguna</label><input id="authUser" type="text" autocomplete="username" placeholder="misal: dimas"></div>
+      <div class="field"><label>Kata sandi</label><input id="authPass" type="password" autocomplete="${state.authTab==='login'?'current-password':'new-password'}" placeholder="••••••"></div>
+      <button class="btn btn-primary btn-block" id="authSubmit">${state.authTab==='login'?'Masuk':'Buat akun'}</button>
+      <div class="auth-error" id="authError"></div>
+      <div class="auth-note">${state.authTab==='register' ? 'Akun pertama yang didaftarkan otomatis jadi admin. Ini akun ringan untuk sesama warga — bukan tingkat keamanan bank, jangan pakai kata sandi yang dipakai di tempat lain.' : 'Belum punya akun? Buka tab Daftar akun.'}</div>
+    </div>
+  </div>`;
+}
+function bindAuthEvents(){
+  $$('[data-authtab]').forEach(b=> b.onclick = ()=>{ state.authTab=b.dataset.authtab; renderRoot(); });
+  $('#authSubmit').onclick = async ()=>{
+    const u = $('#authUser').value; const p = $('#authPass').value;
+    const err = $('#authError'); err.classList.remove('show');
+    try{
+      if(state.authTab==='register') await Auth.register(u,p);
+      else await Auth.login(u,p);
+      renderRoot();
+    }catch(e){ err.textContent = e.message || 'Terjadi kesalahan'; err.classList.add('show'); }
+  };
+}
+
+/* =================== views =================== */
+function viewBeranda(){
+  const k = state.monthKey;
+  const saldo = saldoKas();
+  const budget = Store.budgets[k] || 9500;
+  const used = keluarBulan(k);
+  const pct = Math.min(100, Math.round((used/Math.max(budget,1))*100));
+  const todayIdx = (new Date().getDay()+6)%7;
+  const todayDay = DAYS[todayIdx];
+  const todayPersonId = Store.piket[todayDay[0]];
+  const todayPerson = Store.members.find(m=>m.id===todayPersonId);
+  const recent = [...expensesFor(k)].slice(0,3);
+
+  return `
+  <div class="hero">
+    ${motifSVG()}
+    <div class="hero-label">Sisa saldo kas</div>
+    <div class="hero-amount num">${fmt(saldo)}<span>EGP</span></div>
+    <div class="hero-budget" id="openBudget">
+      <span>Anggaran ${monthLabel(k).split(' ')[0]} <b class="num">${fmt(budget)}</b> · terpakai <b class="num">${fmt(used)}</b></span>
+      ${ICO.chevR}
+    </div>
+    <div class="budget-bar"><i style="width:${pct}%"></i></div>
+  </div>
+
+  <div class="sheet">
+    <div class="sheet-head"><span>Piket hari ini · ${todayDay[1]}</span></div>
+    ${todayPerson ? `
+    <div class="member-row">
+      <div class="avatar" style="background:${colorFor(todayPerson.id)}">${todayPerson.name[0].toUpperCase()}</div>
+      <div class="member-meta"><div class="name">${todayPerson.name}</div><div class="status" style="color:var(--ink-soft)">Kebagian piket hari ini</div></div>
+    </div>` : `<div class="empty">${ICO.empty}<div>Belum ada jadwal piket diatur.</div></div>`}
+  </div>
+
+  <div class="sheet">
+    <div class="sheet-head"><span>Aktivitas terbaru</span><a href="#" data-goto="riwayat">Lihat semua ${ICO.chevR}</a></div>
+    ${recent.length===0 ? `<div class="empty">${ICO.empty}<div>Belum ada pengeluaran bulan ini.</div></div>` : recent.map(e=>logRow(e)).join('')}
+  </div>
+
+  <div class="sheet" style="padding:16px;">
+    <button class="btn btn-ghost btn-block" id="exportPdfBtn">${ICO.doc} Ekspor laporan bulan ini (PDF)</button>
+  </div>
+  `;
+}
+
+function viewIuran(){
+  const k = state.monthKey;
+  const list = Store.members;
+  const paidCount = paidCountBulan(k);
+  const masuk = masukBulan(k);
+  return `
+  <div class="month-switch">
+    <button data-shift="-1">${ICO.chevL}</button>
+    <h2>${monthLabel(k)}</h2>
+    <button data-shift="1">${ICO.chevR}</button>
+  </div>
+  <div class="month-summary">${paidCount} dari ${list.length} orang sudah bayar<br>Masuk ke kas ${monthLabel(k)}: <span class="plus num">+${fmt(masuk)} EGP</span></div>
+  <div class="sheet">
+    ${list.length===0 ? `<div class="empty">${ICO.users}<div>Belum ada anggota. Tambah lewat pengaturan.</div></div>` :
+      list.map(m=>{
+        const paid = isPaid(m.id,k); const rec = paidRecord(m.id,k); const amt = amountFor(m);
+        const cat = (CATS.find(c=>c.id===m.cat)||CATS[0]).label;
+        return `<div class="member-row">
+          <div class="avatar" style="background:${colorFor(m.id)}">${m.name[0].toUpperCase()}</div>
+          <div class="member-meta">
+            <div class="name">${m.name} <small>· ${cat}</small></div>
+            <div class="status ${paid?'ok':'due'} num">${paid? 'Sudah bayar '+fmt(rec.amount) : 'Belum bayar '+fmt(amt)}</div>
+          </div>
+          <button class="switch ${paid?'on':''}" data-toggle="${m.id}"><i></i></button>
         </div>`;
-    }).join("");
-    items.forEach(item => renderQtyRow(item.id));
+      }).join('')}
+  </div>
+  <div class="hint">Ketuk tombol kalau sudah bayar penuh — uangnya langsung masuk kas. Setiap perubahan tercatat dengan nama &amp; jam di tab Riwayat.</div>
+  `;
 }
 
-function renderQtyRow(id) {
-    const row = document.getElementById(`qtyrow-${id}`);
-    if (!row) return;
-    if (!isAvailable(id)) { row.innerHTML = `<span class="sold-out-label">Sedang Habis</span>`; return; }
-    const qty = cart[id] || 0;
-    if (qty <= 0) {
-        row.innerHTML = `<button class="add-btn" onclick="addItem('${id}')">+ Tambah</button>`;
-    } else {
-        row.innerHTML = `
-            <div class="qty-controls">
-                <button class="qty-btn" onclick="removeItem('${id}')">-</button>
-                <span class="qty-value">${qty}</span>
-                <button class="qty-btn" onclick="addItem('${id}')">+</button>
-            </div>`;
-    }
-}
+function viewRiwayat(){
+  const items = [];
+  Store.iuran.filter(i=>i.paid).forEach(i=>{
+    const m = Store.members.find(x=>x.id===i.memberId);
+    items.push({ts:i.updatedAt||0, title:`${m?m.name:'Anggota'} bayar iuran`, meta:`oleh ${i.updatedBy||'—'}`, amount:i.amount, sign:1});
+  });
+  Store.expenses.forEach(e=>{
+    items.push({ts:e.addedAt||0, title:e.desc, meta:`oleh ${e.addedBy||'—'}`, amount:e.amount, sign:-1});
+  });
+  items.sort((a,b)=>b.ts-a.ts);
+  if(items.length===0) return `<div class="sheet"><div class="empty">${ICO.empty}<div>Belum ada aktivitas tercatat.</div></div></div>`;
 
-function addItem(id) { if (!isAvailable(id)) return; cart[id] = (cart[id] || 0) + 1; renderQtyRow(id); updateCartBar(); }
-function removeItem(id) { if (!cart[id]) return; cart[id] -= 1; if (cart[id] <= 0) delete cart[id]; renderQtyRow(id); updateCartBar(); renderOrderLines(); }
-window.addItem = addItem;
-window.removeItem = removeItem;
-
-function cartTotalValue() { return Object.entries(cart).reduce((sum, [id, qty]) => sum + findItem(id).price * qty, 0); }
-function cartCountValue() { return Object.values(cart).reduce((a, b) => a + b, 0); }
-
-function updateCartBar() {
-    const bar = document.getElementById("cartBar");
-    const count = cartCountValue();
-    if (count > 0) {
-        bar.classList.add("visible");
-        document.getElementById("cartCount").textContent = count + " item";
-        document.getElementById("cartTotal").textContent = formatPrice(cartTotalValue());
-    } else { bar.classList.remove("visible"); }
-    renderOrderLines();
-}
-
-function renderOrderLines() {
-    const container = document.getElementById("orderLines");
-    const ids = Object.keys(cart);
-    if (ids.length === 0) {
-        container.innerHTML = `<p class="empty-msg">Belum ada item dipilih.</p>`;
-    } else {
-        container.innerHTML = ids.map(id => {
-            const item = findItem(id); const qty = cart[id];
-            return `<div class="order-line"><div><div class="name">${item.name}</div><div class="sub">${qty} x ${formatPrice(item.price)}</div></div><div>${formatPrice(item.price * qty)}</div></div>`;
-        }).join("");
-    }
-    document.getElementById("modalTotal").textContent = formatPrice(cartTotalValue());
-    validateSubmit();
-}
-
-function validateSubmit() {
-    const btn = document.getElementById("submitOrder");
-    const hasItems = cartCountValue() > 0;
-    const name = document.getElementById("customerName").value.trim();
-    const address = document.getElementById("deliveryAddress").value.trim();
-    const needsAddress = orderType === "delivery" ? address.length > 0 : true;
-    btn.disabled = !(hasItems && name.length > 0 && needsAddress);
-}
-
-document.getElementById("cartBar").addEventListener("click", () => { document.getElementById("overlay").classList.add("visible"); renderOrderLines(); });
-document.getElementById("closeModal").addEventListener("click", () => document.getElementById("overlay").classList.remove("visible"));
-document.getElementById("overlay").addEventListener("click", (e) => { if (e.target.id === "overlay") document.getElementById("overlay").classList.remove("visible"); });
-
-document.querySelectorAll(".type-option").forEach(el => {
-    el.addEventListener("click", () => {
-        document.querySelectorAll(".type-option").forEach(o => o.classList.remove("active"));
-        el.classList.add("active");
-        orderType = el.dataset.type;
-        const hint = document.getElementById("modeHint");
-        const tableField = document.getElementById("tableField");
-        const addressField = document.getElementById("addressField");
-        tableField.style.display = "none";
-        addressField.style.display = "none";
-        if (orderType === "dinein") {
-            hint.textContent = "Pesanan dine in akan diproses langsung oleh staf kami.";
-            tableField.style.display = "block";
-        } else if (orderType === "takeaway") {
-            hint.textContent = "Pesanan take away akan diproses langsung, silakan ambil di kasir kami.";
-        } else {
-            hint.textContent = "Pesanan delivery akan otomatis dikirim ke WhatsApp kami untuk konfirmasi alamat & ongkir.";
-            addressField.style.display = "block";
-        }
-        validateSubmit();
+  let groups = {};
+  items.forEach(it=>{
+    const d = it.ts ? new Date(it.ts) : new Date();
+    const key = d.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+    (groups[key] = groups[key]||[]).push(it);
+  });
+  let html = '';
+  Object.entries(groups).forEach(([day,arr])=>{
+    html += `<div class="day-group">${day}</div><div class="wrap-sheet">`;
+    arr.forEach(it=>{
+      const time = it.ts ? new Date(it.ts).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}) : '';
+      html += `<div class="log-row">
+        <div class="log-dot" style="background:${it.sign>0?'var(--success-soft)':'var(--danger-soft)'};color:${it.sign>0?'var(--success)':'var(--danger)'}">${it.sign>0?ICO.in:ICO.out}</div>
+        <div class="log-body"><div class="log-title">${it.title}</div><div class="log-meta">${it.meta} · ${time}</div></div>
+        <div class="log-amount num" style="color:${it.sign>0?'var(--success)':'var(--danger)'}">${it.sign>0?'+':'−'}${fmt(it.amount)}</div>
+      </div>`;
     });
-});
-
-document.getElementById("customerName").addEventListener("input", validateSubmit);
-document.getElementById("deliveryAddress").addEventListener("input", validateSubmit);
-
-function showProcessAnim(isDelivery) {
-    const overlay = document.getElementById("processOverlay");
-    const sub = document.getElementById("processSub");
-    sub.textContent = isDelivery ? "Sebentar lagi kamu akan diarahkan ke WhatsApp..." : "Mohon ditunggu sebentar ya!";
-    overlay.classList.add("visible");
-    const delay = isDelivery ? 2600 : 1800;
-    return new Promise(resolve => setTimeout(() => { overlay.classList.remove("visible"); resolve(); }, delay));
+    html += `</div>`;
+  });
+  return html;
 }
 
-document.getElementById("submitOrder").addEventListener("click", async () => {
-    const name = document.getElementById("customerName").value.trim();
-    const table = document.getElementById("tableNumber").value.trim();
-    const address = document.getElementById("deliveryAddress").value.trim();
-    const ids = Object.keys(cart);
-    if (!name || ids.length === 0) return;
-    if (orderType === "delivery" && !address) return;
+function logRow(e){
+  const time = e.addedAt ? new Date(e.addedAt).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}) : '';
+  return `<div class="member-row">
+    <div class="log-dot" style="background:var(--danger-soft);color:var(--danger)">${ICO.out}</div>
+    <div class="member-meta"><div class="name">${e.desc}</div><div class="status" style="color:var(--ink-faint)">oleh ${e.addedBy||'—'} · ${time}</div></div>
+    <div class="log-amount num" style="color:var(--danger)">−${fmt(e.amount)}</div>
+  </div>`;
+}
 
-    const items = ids.map(id => { const item = findItem(id); return { id, name: item.name, qty: cart[id], price: item.price }; });
-    const total = cartTotalValue();
+function viewRumah(){
+  return `
+  <div class="sheet">
+    <div class="sheet-head"><span>Jadwal piket mingguan</span><a href="#" id="icsBtn">${ICO.cal} Tambah ke kalender</a></div>
+    ${DAYS.map(([code,label])=>{
+      const val = Store.piket[code] || '';
+      return `<div class="piket-row">
+        <div class="piket-day">${label}</div>
+        <select class="piket-select" data-day="${code}">
+          <option value="">— pilih —</option>
+          ${Store.members.map(m=>`<option value="${m.id}" ${val===m.id?'selected':''}>${m.name}</option>`).join('')}
+        </select>
+      </div>`;
+    }).join('')}
+  </div>
+  <div class="hint">Ketuk kalender di atas untuk unduh file .ics dan impor ke kalender HP kamu — otomatis diingetin tiap minggu.</div>
+  `;
+}
 
-    let docRef;
-    try {
-        docRef = await addDoc(ordersCol, {
-            type: orderType,
-            customer: name,
-            table: orderType === "dinein" ? table : "",
-            address: orderType === "delivery" ? address : "",
-            items, total, status: "pending", source: "customer", createdAt: serverTimestamp()
-        });
-    } catch (e) {
-        showToast("Gagal mengirim pesanan, cek koneksi internet.");
-        return;
-    }
+/* =================== modals =================== */
+function openModal(html){ $('#modalBody').innerHTML = html; $('#overlay').classList.add('show'); }
+function closeModal(){ $('#overlay').classList.remove('show'); }
 
-    trackOrder(docRef.id);
-    document.getElementById("overlay").classList.remove("visible");
+function modalAddExpense(){
+  openModal(`
+    <h3>Catat pengeluaran</h3>
+    <div class="field"><label>Untuk apa</label><input id="exDesc" type="text" placeholder="Misal: galon &amp; gas"></div>
+    <div class="field"><label>Nominal (EGP)</label><input id="exAmount" type="number" min="0" step="0.5" placeholder="0"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="exCancel">Batal</button>
+      <button class="btn btn-primary" id="exSave">Simpan</button>
+    </div>
+  `);
+  $('#exCancel').onclick = closeModal;
+  $('#exSave').onclick = async ()=>{
+    const desc = $('#exDesc').value.trim();
+    const amount = parseFloat($('#exAmount').value);
+    if(!desc || !amount || amount<=0){ toast('Isi dulu semua kolomnya'); return; }
+    await Store.addExpense(desc, amount, state.monthKey);
+    closeModal(); toast('Pengeluaran dicatat');
+  };
+}
 
-    const isDelivery = orderType === "delivery";
-    await showProcessAnim(isDelivery);
+function modalFabSheet(){
+  openModal(`
+    <h3>Tambah</h3>
+    <div class="sheet-actions">
+      <button class="action-row" id="actExpense"><span class="ic">${ICO.cart}</span><div><b>Catat pengeluaran</b><span>Belanja, tagihan, dll — otomatis potong saldo</span></div></button>
+      ${isAdmin() ? `<button class="action-row" id="actMember"><span class="ic">${ICO.users}</span><div><b>Kelola anggota</b><span>Tambah atau ubah warga</span></div></button>` : ''}
+    </div>
+  `);
+  $('#actExpense').onclick = modalAddExpense;
+  $('#actMember')?.addEventListener('click', modalMembers);
+}
 
-    if (isDelivery) {
-        let message = `Halo Hasana Chicken, saya ingin memesan (*DELIVERY*)\n\nNama: ${name}\nAlamat: ${address}\n\nPesanan:\n`;
-        items.forEach(it => message += `- ${it.name} x${it.qty} = ${formatPrice(it.price * it.qty)}\n`);
-        message += `\nTotal: ${formatPrice(total)}`;
-        window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(message)}`, "_blank");
-        showToast("Pesanan delivery dikirim ke WhatsApp.");
-    } else if (orderType === "takeaway") {
-        showToast("Pesanan take away diterima. Cek status pesanan di atas menu.");
-    } else {
-        showToast("Pesanan dine in diterima. Cek status pesanan di atas menu.");
-    }
+function modalBudget(){
+  const k = state.monthKey;
+  if(!isAdmin()){ openModal(`<h3>Anggaran ${monthLabel(k)}</h3><div class="empty">${ICO.lock}<div>Hanya admin yang bisa mengubah anggaran.</div></div>`); return; }
+  openModal(`
+    <h3>Anggaran ${monthLabel(k)}</h3>
+    <div class="field"><label>Anggaran bulan ini (EGP)</label><input id="budgetInput" type="number" min="0" step="10" value="${Store.budgets[k]||9500}"></div>
+    <div class="modal-actions"><button class="btn btn-ghost" id="bCancel">Batal</button><button class="btn btn-primary" id="bSave">Simpan</button></div>
+  `);
+  $('#bCancel').onclick = closeModal;
+  $('#bSave').onclick = async ()=>{
+    const v = parseFloat($('#budgetInput').value)||0;
+    await Store.setBudget(k, v);
+    closeModal(); toast('Anggaran diperbarui');
+  };
+}
 
-    ids.forEach(id => delete cart[id]);
-    ids.forEach(id => renderQtyRow(id));
-    updateCartBar();
-    document.getElementById("customerName").value = "";
-    document.getElementById("tableNumber").value = "";
-    document.getElementById("deliveryAddress").value = "";
-});
-
-function trackOrder(orderId) {
-    const orderDocRef = doc(db, "orders", orderId);
-    const entry = { id: orderId, data: null };
-    myOrders.unshift(entry);
-    renderMyOrders();
-    onSnapshot(orderDocRef, (snap) => {
-        if (!snap.exists()) return;
-        const prevStatus = entry.data ? entry.data.status : null;
-        entry.data = snap.data();
-        renderMyOrders();
-        if (prevStatus && prevStatus !== entry.data.status) {
-            showToast(`Pesanan ${entry.data.customer}: ${statusLabel(entry.data.status, entry.data.type)}`);
-            if (navigator.vibrate) navigator.vibrate(200);
-        }
+function modalMembers(){
+  if(!isAdmin()){ openModal(`<h3>Kelola anggota</h3><div class="empty">${ICO.lock}<div>Hanya admin yang bisa mengubah daftar anggota.</div></div>`); return; }
+  const draft = Store.members.map(m=>({...m}));
+  function rows(){
+    return draft.map((m,idx)=>`
+      <div class="member-edit-row" data-idx="${idx}">
+        <input type="text" value="${m.name}" data-f="name">
+        <select data-f="cat">${CATS.map(c=>`<option value="${c.id}" ${m.cat===c.id?'selected':''}>${c.label}</option>`).join('')}</select>
+        <button class="icon-x" data-remove="${idx}">${ICO.x}</button>
+      </div>`).join('');
+  }
+  openModal(`
+    <h3>Kelola anggota</h3>
+    <div id="memberRows">${rows()}</div>
+    <button class="btn btn-ghost btn-block" id="addMemberRow" style="margin-top:10px;">${ICO.plus} Tambah anggota</button>
+    <div class="modal-actions"><button class="btn btn-ghost" id="mCancel">Batal</button><button class="btn btn-primary" id="mSave">Simpan</button></div>
+  `);
+  function bindRows(){
+    $$('#memberRows .member-edit-row').forEach(row=>{
+      const idx = +row.dataset.idx;
+      row.querySelector('[data-f=name]').oninput = e=> draft[idx].name = e.target.value;
+      row.querySelector('[data-f=cat]').onchange = e=> draft[idx].cat = e.target.value;
+      row.querySelector('[data-remove]')?.addEventListener('click', ()=>{ draft.splice(idx,1); $('#memberRows').innerHTML = rows(); bindRows(); });
     });
+  }
+  bindRows();
+  $('#addMemberRow').onclick = ()=>{ draft.push({id:uid(), name:'', cat:'full', order:draft.length+1}); $('#memberRows').innerHTML = rows(); bindRows(); };
+  $('#mCancel').onclick = closeModal;
+  $('#mSave').onclick = async ()=>{
+    const clean = draft.filter(m=>m.name.trim()).map((m,i)=>({...m, name:m.name.trim(), order:i+1}));
+    await Store.saveMembers(clean);
+    closeModal(); toast('Anggota disimpan');
+  };
 }
 
-function typeLabel(t) { return t === "delivery" ? "Delivery" : t === "takeaway" ? "Take Away" : "Dine In"; }
-
-function renderMyOrders() {
-    const section = document.getElementById("myOrdersSection");
-    const list = document.getElementById("myOrdersList");
-    const withData = myOrders.filter(o => o.data);
-    if (withData.length === 0) { section.style.display = "none"; return; }
-    section.style.display = "block";
-    list.innerHTML = withData.map(o => {
-        const d = o.data;
-        const itemsText = d.items.map(it => `${it.name} x${it.qty}`).join(", ");
-        return `
-            <div class="status-card">
-                <div class="status-left">
-                    <span class="n">${typeLabel(d.type)}${d.table ? " · Meja " + d.table : ""}</span>
-                    <span class="sub">${itemsText}</span>
-                </div>
-                <span class="status-badge ${d.status}">${statusLabel(d.status, d.type)}</span>
-            </div>`;
-    }).join("");
+function modalAccounts(){
+  if(!isAdmin()){ openModal(`<h3>Kelola akun</h3><div class="empty">${ICO.lock}<div>Hanya admin yang bisa mengelola akun warga.</div></div>`); return; }
+  const list = Store.accounts.slice().sort((a,b)=> (a.username||'').localeCompare(b.username||''));
+  const adminCount = list.filter(a=>a.isAdmin).length;
+  openModal(`
+    <h3>Kelola akun</h3>
+    <div id="acctRows">
+      ${list.map(a=>`
+        <div class="acct-row" data-id="${a.id}">
+          <span class="name">${a.username} ${a.isAdmin?'<span class=\"pill success\">Admin</span>':''}</span>
+          <button class="btn btn-ghost" data-toggleadmin="${a.id}" style="padding:6px 10px;font-size:12px;">${a.isAdmin?'Cabut admin':'Jadikan admin'}</button>
+          <button class="icon-x" data-delacct="${a.id}">${ICO.x}</button>
+        </div>`).join('')}
+    </div>
+    <div class="modal-actions"><button class="btn btn-ghost btn-block" id="acctClose">Tutup</button></div>
+  `);
+  $('#acctClose').onclick = closeModal;
+  $$('[data-toggleadmin]').forEach(btn=> btn.onclick = async ()=>{
+    const id = btn.dataset.toggleadmin;
+    const acc = list.find(a=>a.id===id);
+    if(acc.isAdmin && adminCount<=1){ toast('Minimal harus ada 1 admin'); return; }
+    await Store.saveAccount({...acc, isAdmin:!acc.isAdmin});
+    closeModal(); toast('Akun diperbarui');
+  });
+  $$('[data-delacct]').forEach(btn=> btn.onclick = async ()=>{
+    const id = btn.dataset.delacct;
+    const acc = list.find(a=>a.id===id);
+    if(acc.isAdmin && adminCount<=1){ toast('Tidak bisa menghapus satu-satunya admin'); return; }
+    if(id === Auth.session.id){ toast('Tidak bisa menghapus akun sendiri saat masih masuk'); return; }
+    await Store.deleteAccount(id);
+    closeModal(); toast('Akun dihapus');
+  });
 }
+
+function modalSettings(){
+  openModal(`
+    <h3>Pengaturan</h3>
+    <div class="sheet-actions">
+      <button class="action-row" id="sMembers"><span class="ic">${ICO.users}</span><div><b>Kelola anggota</b><span>Nama, kategori tagihan${isAdmin()?'':' · khusus admin'}</span></div></button>
+      <button class="action-row" id="sBudget"><span class="ic">${ICO.doc}</span><div><b>Atur anggaran bulan ini</b><span>Dasar hitung iuran per orang${isAdmin()?'':' · khusus admin'}</span></div></button>
+      ${isAdmin() ? `<button class="action-row" id="sAccounts"><span class="ic">${ICO.shield}</span><div><b>Kelola akun</b><span>Atur admin &amp; hapus akun</span></div></button>` : ''}
+      <button class="action-row" id="sLogout"><span class="ic" style="background:var(--danger-soft);color:var(--danger)">${ICO.logout}</span><div><b>Keluar</b><span>Masuk sebagai ${Auth.session.username}</span></div></button>
+    </div>
+  `);
+  $('#sMembers').onclick = modalMembers;
+  $('#sBudget').onclick = modalBudget;
+  $('#sAccounts')?.addEventListener('click', modalAccounts);
+  $('#sLogout').onclick = ()=>{ closeModal(); Auth.logout(); };
+}
+
+/* =================== PDF & ICS export =================== */
+async function exportPDF(){
+  try{
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const k = state.monthKey;
+    let y = 20;
+    doc.setFont('helvetica','bold'); doc.setFontSize(16);
+    doc.text('Laporan Kas Warga — Cleverton', 14, y); y+=8;
+    doc.setFontSize(11); doc.setFont('helvetica','normal');
+    doc.text(`Bulan: ${monthLabel(k)}`, 14, y); y+=10;
+    doc.setFont('helvetica','bold'); doc.text('Ringkasan', 14, y); y+=6;
+    doc.setFont('helvetica','normal');
+    doc.text(`Saldo kas saat ini: ${fmt(saldoKas())} EGP`, 14, y); y+=6;
+    doc.text(`Anggaran bulan ini: ${fmt(Store.budgets[k]||9500)} EGP`, 14, y); y+=6;
+    doc.text(`Terpakai bulan ini: ${fmt(keluarBulan(k))} EGP`, 14, y); y+=6;
+    doc.text(`Iuran masuk bulan ini: ${fmt(masukBulan(k))} EGP`, 14, y); y+=10;
+    doc.setFont('helvetica','bold'); doc.text('Status iuran', 14, y); y+=6;
+    doc.setFont('helvetica','normal');
+    Store.members.forEach(m=>{
+      const paid = isPaid(m.id,k); const rec = paidRecord(m.id,k);
+      doc.text(`${m.name} — ${paid? 'Sudah bayar ('+fmt(rec.amount)+' EGP)' : 'Belum bayar'}`, 14, y); y+=6;
+    });
+    y+=4;
+    doc.setFont('helvetica','bold'); doc.text('Pengeluaran', 14, y); y+=6;
+    doc.setFont('helvetica','normal');
+    const exp = expensesFor(k);
+    if(exp.length===0){ doc.text('— tidak ada —', 14, y); y+=6; }
+    exp.forEach(e=>{
+      const d = new Date(e.date).toLocaleDateString('id-ID',{day:'numeric',month:'short'});
+      doc.text(`${d}  ${e.desc} — ${fmt(e.amount)} EGP (${e.addedBy||'—'})`, 14, y); y+=6;
+    });
+    const blob = doc.output('blob');
+    const filename = `laporan-cleverton-${k}.pdf`;
+    const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=filename; a.click();
+    toast('Laporan diunduh — bisa langsung dibagikan ke grup WA');
+  }catch(e){ console.error(e); toast('Gagal membuat PDF'); }
+}
+
+function exportICS(){
+  const dayNum = {sen:'MO',sel:'TU',rab:'WE',kam:'TH',jum:'FR',sab:'SA',min:'SU'};
+  let lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Cleverton//Piket//ID'];
+  const now = new Date();
+  DAYS.forEach(([code,label])=>{
+    const memberId = Store.piket[code];
+    const member = Store.members.find(m=>m.id===memberId);
+    if(!member) return;
+    const next = nextWeekday(now, dayNum[code]);
+    const dt = ymd(next);
+    lines.push('BEGIN:VEVENT');
+    lines.push(`UID:${code}-${uid()}@cleverton`);
+    lines.push(`DTSTART;VALUE=DATE:${dt}`);
+    lines.push(`RRULE:FREQ=WEEKLY;BYDAY=${dayNum[code]}`);
+    lines.push(`SUMMARY:Piket rumah — ${member.name}`);
+    lines.push('END:VEVENT');
+  });
+  lines.push('END:VCALENDAR');
+  const ics = lines.join('\r\n');
+  const blob = new Blob([ics], {type:'text/calendar'});
+  const filename = 'piket-cleverton.ics';
+  const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=filename; a.click();
+  toast('File .ics diunduh — impor ke kalender HP kamu');
+}
+function nextWeekday(from, code){
+  const map = {SU:0,MO:1,TU:2,WE:3,TH:4,FR:5,SA:6};
+  const d = new Date(from); const target = map[code];
+  const diff = (target - d.getDay() + 7) % 7;
+  d.setDate(d.getDate()+diff);
+  return d;
+}
+function ymd(d){ return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`; }
+
+/* =================== events =================== */
+function bindEvents(){
+  $$('.tab-btn').forEach(b=> b.onclick = ()=>{ state.tab=b.dataset.tab; renderRoot(); });
+  $$('[data-goto]').forEach(a=> a.onclick = (e)=>{ e.preventDefault(); state.tab=a.dataset.goto; renderRoot(); });
+  $('#fabBtn').onclick = modalFabSheet;
+  $('#settingsBtn').onclick = modalSettings;
+  $('#overlay').onclick = (e)=>{ if(e.target.id==='overlay') closeModal(); };
+  $$('[data-shift]').forEach(b=> b.onclick = ()=>{ state.monthKey = shiftMonth(state.monthKey, +b.dataset.shift); renderRoot(); });
+  $$('[data-toggle]').forEach(b=> b.onclick = ()=>{
+    const id = b.dataset.toggle;
+    Store.setMemberPaid(id, state.monthKey, !isPaid(id, state.monthKey));
+  });
+  $('#openBudget')?.addEventListener('click', modalBudget);
+  $('#exportPdfBtn')?.addEventListener('click', exportPDF);
+  $('#icsBtn')?.addEventListener('click', (e)=>{ e.preventDefault(); exportICS(); });
+  $$('.piket-select').forEach(sel=> sel.onchange = ()=> Store.setPiket(sel.dataset.day, sel.value));
+}
+$('#themeBtn').onclick = ()=>{
+  const cur = document.documentElement.getAttribute('data-theme');
+  const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+  const next = cur==='dark' ? 'light' : cur==='light' ? (dark?'dark':'light') : (dark? 'light':'dark');
+  document.documentElement.setAttribute('data-theme', next);
+  renderRoot();
+};
+
+/* =================== boot =================== */
+Store.init();
 </script>
-
 </body>
 </html>
